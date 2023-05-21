@@ -1,0 +1,324 @@
+import { nanoid } from "nanoid";
+import { db } from "../database/database.connection.js";
+import joi from 'joi';
+
+const shortenUrlSchema = joi.object({
+    url: joi.string().uri().required(),
+});
+
+export const shortenUrl = async (req, res) => {
+    try {
+        const { error, value } = shortenUrlSchema.validate(req.body);
+        if (error) {
+            return res.status(422).send(error.details[0].message);
+        }
+
+        const { url } = value;
+        const userId = res.locals.userId;
+
+        const shortUrl = nanoid();
+
+        const query = `
+            INSERT INTO urls (originalUrl, shortenedUrl, user_id)
+            VALUES ($1, $2, $3)
+            RETURNING id`;
+        const values = [url, shortUrl, userId];
+
+        const result = await db.query(query, values);
+
+        const urlId = result.rows[0].id;
+
+        return res.status(201).send({ id: urlId, shortUrl });
+    } catch (error) {
+        console.error('Error creating short URL:', error);
+        return res.status(500).send('Internal server error.');
+    }
+};
+
+export const findURLById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const query = `
+            SELECT id, shortenedUrl, originalUrl
+            FROM urls WHERE id = $1`;
+        const values = [id];
+
+        const result = await db.query(query, values);
+
+        if (result.rowCount === 0) return res.status(404).send('Shortened URL not found.');
+
+        return res.status(200).send(result.rows[0]);
+    } catch (error) {
+        
+        return res.status(500).send('Internal server error.');
+    }
+};
+
+export const getShortURL = async (req, res) => {
+    try {
+        const { shortUrl } = req.params;
+
+        const query = 'SELECT originalUrl FROM urls WHERE shortenedUrl = $1';
+        const values = [shortUrl];
+
+        const result = await db.query(query, values);
+
+        if (result.rowCount === 0) return res.sendStatus(404);
+        
+        const originalUrl = result.rows[0].originalurl;
+
+        const updateQuery = 'UPDATE urls SET visitCount = visitCount + 1 WHERE shortenedUrl = $1';
+        await db.query(updateQuery, [shortUrl]);
+
+        return res.redirect(originalUrl);
+    } catch (error) {
+        return res.status(500).send('Internal server error.');
+    }
+};
+
+export const deleteURL = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = res.locals.userId;
+
+        const query = 'SELECT * FROM urls WHERE id = $1 AND user_id = $2';
+        const values = [id, userId];
+
+        const result = await db.query(query, values);
+
+        if (result.rows.length === 0) return res.sendStatus(401);
+
+        const deleteQuery = 'DELETE FROM urls WHERE id = $1';
+        await db.query(deleteQuery, [id]);
+
+        return res.sendStatus(204);
+    } catch (error) {
+        return res.status(500).send('Internal server error.');
+    }
+};
+
+export const usersMe = async (req, res) => {
+    try {
+        const userId = res.locals.userId;
+        
+        const userQuery = 'SELECT * FROM users WHERE id = $1';
+        const userValues = [userId];
+
+        const userResult = await db.query(userQuery, userValues);
+        const user = userResult.rows[0];
+
+        if (!user) return res.status(404).send('User not found');
+
+        const urlsQuery = 'SELECT * FROM urls WHERE user_id = $1';
+        const urlsValues = [userId];
+
+        const urlsResult = await db.query(urlsQuery, urlsValues);
+        const urls = urlsResult.rows;
+
+        const urlsData = urls.map((url) => ({
+            id: url.id,
+            shortUrl: url.shortenedurl,
+            url: url.originalurl,
+            visitCount: url.visitcount,
+        }));
+
+        const visitCount = urls.reduce((total, url) => total + url.visitcount, 0);
+
+        const responseData = {
+            id: user.id,
+            name: user.name,
+            visitCount: visitCount,
+            shortenedUrls: urlsData,
+        };
+
+        res.status(200).send(responseData);
+    } catch (error) {
+        console.log(error)
+        res.status(500).send('Failed to retrieve user data');
+    }
+};
+
+export const getRanking = async (req, res) => {
+    try {
+        const rankingQuery =
+            `SELECT users.id, users.name, 
+            COUNT(urls.id) AS linksCount, SUM(urls.visitcount) AS visitCount 
+            FROM users LEFT JOIN urls ON users.id = urls.user_id 
+            GROUP BY users.id ORDER BY visitCount DESC LIMIT 10`;
+        const rankingResult = await db.query(rankingQuery);
+
+        const ranking = rankingResult.rows.map((row) => ({
+            id: row.id,
+            name: row.name,
+            linksCount: row.linkscount || 0,
+            visitCount: row.visitcount || 0,
+        }));
+
+        res.status(200).send(ranking);
+    } catch (error) {
+        res.status(500).send('Internal server error');
+    }
+};
+
+
+
+
+/* import { nanoid } from "nanoid";
+import { db } from "../database/database.connection.js";
+import joi from 'joi'
+
+const shortenUrlSchema = joi.object({
+    url: joi.string().uri().required(),
+});
+
+export const shortenUrl = async (req, res) => {
+    const { error } = shortenUrlSchema.validate(req.body);
+    if (error) {
+        return res.status(422).send({ error: error.details[0].message });
+    }
+
+    const { url } = req.body;
+    const userId = req.user;
+
+    const shortUrl = nanoid();
+
+    try {
+        const result = await db.query(`
+            INSERT INTO urls (originalUrl, shortenedUrl, userId) 
+            VALUES ($1, $2, $3) RETURNING urlId`,
+            [url, shortUrl, userId]);
+
+        const urlId = result.rows[0].urlId;
+
+        return res.status(201).send({ id: urlId, shortUrl });
+    } catch (err) {
+        return res.status(500).send('Erro interno do servidor.');
+    }
+};
+
+export const findURLById = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await db.query(`
+            SELECT urlId, shortenedUrl, originalUrl 
+            FROM urls WHERE urlId = $1`, [id]);
+
+        if (result.rowCount === 0) return res.status(404).send('URL encurtada não encontrada.')
+
+        return res.status(200).send(result.rows[0]);
+    } catch (err) {
+        return res.status(500).send('Erro interno do servidor.');
+    }
+};
+
+export const getShortURL = async (req, res) => {
+    const { shortUrl } = req.params;
+
+    try {
+        const query = 'SELECT originalUrl FROM urls WHERE shortenedUrl = $1';
+        const result = await db.query(query, [shortUrl]);
+
+        if (result.rowCount === 0) return res.sendStatus(404);
+
+        const originalUrl = result.rows[0].originalurl;
+
+        const updateQuery = 'UPDATE urls SET visitCount = visitCount + 1 WHERE shortenedUrl = $1';
+        await db.query(updateQuery, [shortUrl]);
+
+        return res.redirect(originalUrl);
+    } catch (error) {
+        return res.status(500).send('Erro interno do servidor.');
+    }
+};
+
+export const deleteURL = async (req, res) => {
+    const { id } = req.params;
+    const urlId = req.params.id;
+
+    try {
+        const query = 'SELECT * FROM urls WHERE urlId = $1 AND userId = $2';
+        const result = await client.query(query, [urlId, userId]);
+
+        if (result.rows.length === 0) return res.sendStatus(401);
+
+        const deleteQuery = 'DELETE FROM urls WHERE urlId = $1';
+        await client.query(deleteQuery, [urlId]);
+
+        res.sendStatus(204);
+
+        return res.sendStatus(204);
+    } catch (error) {
+        return res.status(500).send('Erro interno do servidor.');
+    }
+};
+
+export const usersMe = async (req, res) => {
+    try {
+        const userId = req.user.id; // Obtém o ID do usuário autenticado
+
+        // Consulta o banco de dados para obter as informações do usuário
+        const userQuery = 'SELECT * FROM users WHERE userId = $1';
+        const userValues = [userId];
+
+        const userResult = await db.query(userQuery, userValues);
+        const user = userResult.rows[0];
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Consulta o banco de dados para obter as URLs encurtadas do usuário
+        const urlsQuery = 'SELECT * FROM urls WHERE userId = $1';
+        const urlsValues = [userId];
+
+        const urlsResult = await db.query(urlsQuery, urlsValues);
+        const urls = urlsResult.rows;
+
+        // Calcula a soma da quantidade de visitas para cada URL
+        const urlsData = urls.map((url) => ({
+            id: url.urlId,
+            shortUrl: url.shortenedUrl,
+            url: url.originalUrl,
+            visitCount: url.visitCount,
+        }));
+
+        const visitCount = urls.reduce((total, url) => total + url.visitCount, 0);
+
+        // Monta a resposta no formato especificado
+        const responseData = {
+            id: user.userId,
+            name: user.name,
+            visitCount: visitCount,
+            shortenedUrls: urlsData,
+        };
+
+        res.status(200).json(responseData);
+    } catch (error) {
+        console.error('Error retrieving user data:', error);
+        res.status(500).json({ error: 'Failed to retrieve user data' });
+    }
+};
+
+export const getRanking = async (req, res) => {
+    try {
+        // Obtém os usuários ordenados pela soma de visitas
+        const rankingQuery =
+            'SELECT users.userId, users.name, COUNT(urls.urlId) AS linksCount, SUM(urls.visitCount) AS visitCount FROM users LEFT JOIN urls ON users.userId = urls.userId GROUP BY users.userId ORDER BY visitCount DESC LIMIT 10';
+        const rankingResult = await db.query(rankingQuery);
+
+        const ranking = rankingResult.rows.map((row) => ({
+            id: row.userId,
+            name: row.name,
+            linksCount: row.linksCount || 0,
+            visitCount: row.visitCount || 0,
+        }));
+
+        res.status(200).json(ranking);
+    } catch (error) {
+        console.error('Error during ranking retrieval:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+*/
