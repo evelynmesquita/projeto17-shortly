@@ -14,9 +14,9 @@ export const authenticateToken = (req, res, next) => {
         }
         req.user = user;
         
-        const userId = await db.query(`SELECT * FROM users WHERE email = $1`, [user.email])
-       
-        res.locals.userId = userId.rows[0].id
+        const {rows :[userId]}= await db.query(`SELECT * FROM users WHERE email = $1`, [user.email])
+        
+       res.locals.userId = userId.id
         
         next();
     });
