@@ -7,7 +7,7 @@ export const registerUser = async (req, res) => {
     const { name, email, password, confirmPassword } = req.body;
 
     try {
-        const existingUser = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+        const existingUser = await db.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
         if (existingUser.rows.length > 0) return res.status(409).send('E-mail already registered');
 
         if (password !== confirmPassword) return res.status(422).send('Passwords do not match');
