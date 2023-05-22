@@ -26,20 +26,11 @@ export const registerUser = async (req, res) => {
     }
 };
 
-export const signInSchema = joi.object({
-    email: joi.string().email().required(),
-    password: joi.string().min(6).required()
-}).allow("email", "password")
-
 
 export const signIn = async (req, res) => {
     try {
-        const { error, value } = signInSchema.validate(req.body);
-        if (error) {
-            return res.status(422).json({ error: error.details[0].message });
-        }
 
-        const { email, password } = value;
+        const { email, password } = req.body;
         const query = 'SELECT * FROM users WHERE email = $1';
         const result = await db.query(query, [email.toLowerCase()]);
 

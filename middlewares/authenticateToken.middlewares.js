@@ -13,12 +13,12 @@ export const authenticateToken = (req, res, next) => {
             return res.status(401).send('Token de autenticação inválido.');
         }
         req.user = user;
-        
-        const {rows :[userId]}= await db.query(`SELECT * FROM users WHERE email = $1`, [user.email])
 
-        
-       res.locals.userId = userId.id
-        
+        const { rows: [userId] } = await db.query(`SELECT * FROM users WHERE email = $1`, [user.email])
+
+
+        res.locals.userId = userId.id
+
         next();
     });
 };

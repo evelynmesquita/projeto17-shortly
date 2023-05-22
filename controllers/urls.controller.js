@@ -1,6 +1,5 @@
 import { nanoid } from "nanoid";
 import { db } from "../database/database.connection.js";
-import joi from 'joi';
 
 export const shortenUrl = async (req, res) => {
     try {
