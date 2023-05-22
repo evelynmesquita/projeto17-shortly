@@ -30,7 +30,7 @@ CREATE TABLE public.urls (
     shortenedurl text NOT NULL,
     visitcount integer DEFAULT 0,
     user_id integer,
-    createdat timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    "createdAt" timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -62,7 +62,8 @@ CREATE TABLE public.users (
     id integer NOT NULL,
     name character varying(255) NOT NULL,
     email character varying(255) NOT NULL,
-    password character varying(255) NOT NULL
+    password character varying(255) NOT NULL,
+    "createdAt" timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -128,8 +129,8 @@ INSERT INTO public.urls VALUES (19, 'https://pensamentos.org/wp-content/uploads/
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-INSERT INTO public.users VALUES (1, 'Danni', 'danni@driven.com.br', '$2b$10$.HY/0PDX5.Ll086NsxEgE.xhYRU8kR3Xs.lUym1YfQ9jpt.H2MuPG');
-INSERT INTO public.users VALUES (2, 'Dannii', 'danni2@driven.com.br', '$2b$10$3nGyXEj0eflUSRlzgzvJguDVfHmxlN84SGKw5pqrcI3bUv5IgEpfO');
+INSERT INTO public.users VALUES (1, 'Danni', 'danni@driven.com.br', '$2b$10$.HY/0PDX5.Ll086NsxEgE.xhYRU8kR3Xs.lUym1YfQ9jpt.H2MuPG', '2023-05-22 14:30:58.379023');
+INSERT INTO public.users VALUES (2, 'Dannii', 'danni2@driven.com.br', '$2b$10$3nGyXEj0eflUSRlzgzvJguDVfHmxlN84SGKw5pqrcI3bUv5IgEpfO', '2023-05-22 14:30:58.379023');
 
 
 --
