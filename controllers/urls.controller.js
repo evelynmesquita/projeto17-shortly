@@ -8,12 +8,9 @@ const shortenUrlSchema = joi.object({
 
 export const shortenUrl = async (req, res) => {
     try {
-        const { error, value } = shortenUrlSchema.validate(req.body);
-        if (error) {
-            return res.status(422).send(error.details[0].message);
-        }
+        
 
-        const { url } = value;
+        const { url } = req.body;
         const userId = res.locals.userId;
 
         const shortUrl = nanoid();
