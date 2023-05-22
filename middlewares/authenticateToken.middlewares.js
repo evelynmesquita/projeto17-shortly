@@ -8,13 +8,14 @@ export const authenticateToken = (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
-    jwt.verify(token, process.env.JWT_SECRET, async (err, user) => {
+    jwt.verify(token, process.env.JWT_SECRET || 'mysecret', async (err, user) => {
         if (err) {
             return res.status(401).send('Token de autenticação inválido.');
         }
         req.user = user;
         
         const {rows :[userId]}= await db.query(`SELECT * FROM users WHERE email = $1`, [user.email])
+
         
        res.locals.userId = userId.id
         
