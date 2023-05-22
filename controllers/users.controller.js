@@ -15,8 +15,8 @@ export const registerUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         await db.query('INSERT INTO users (name, email, password) VALUES ($1, $2, $3)', [
-            name,
-            email,
+            name.toLowerCase(),
+            email.toLowerCase(),
             hashedPassword,
         ]);
 
@@ -41,7 +41,7 @@ export const signIn = async (req, res) => {
 
         const { email, password } = value;
         const query = 'SELECT * FROM users WHERE email = $1';
-        const result = await db.query(query, [email]);
+        const result = await db.query(query, [email.toLowerCase()]);
 
         if (result.rows.length === 0) return res.status(401).send('Usuário não encontrado');
         
