@@ -5,7 +5,7 @@ import joi from 'joi';
 export const shortenUrl = async (req, res) => {
     try {
         const { url } = req.body;
-        const userId = res.locals.userId;
+        const { userId } = res.locals;
 
         const shortUrl = nanoid();
 
@@ -71,7 +71,7 @@ export const getShortURL = async (req, res) => {
 export const deleteURL = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = res.locals.userId;
+        const { userId } = res.locals;
 
         const query = 'SELECT * FROM urls WHERE id = $1 AND user_id = $2';
         const values = [id, userId];
@@ -91,7 +91,7 @@ export const deleteURL = async (req, res) => {
 
 export const usersMe = async (req, res) => {
     try {
-        const userId = res.locals.userId;
+        const { userId } = res.locals;
         
         const userQuery = 'SELECT * FROM users WHERE id = $1';
         const userValues = [userId];
