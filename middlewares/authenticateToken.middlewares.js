@@ -8,7 +8,7 @@ export const authenticateToken = (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
-    jwt.verify(token, process.env.JWT_SECRET || 'mysecret', async (err, user) => {
+    jwt.verify(token, process.env.JWT_SECRET , async (err, user) => {
         if (err) {
             return res.status(401).send('Token de autenticação inválido.');
         }
