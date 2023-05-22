@@ -2,10 +2,6 @@ import { nanoid } from "nanoid";
 import { db } from "../database/database.connection.js";
 import joi from 'joi';
 
-const shortenUrlSchema = joi.object({
-    url: joi.string().uri().required(),
-});
-
 export const shortenUrl = async (req, res) => {
     try {
         const { url } = req.body;
