@@ -8,8 +8,6 @@ const shortenUrlSchema = joi.object({
 
 export const shortenUrl = async (req, res) => {
     try {
-        
-
         const { url } = req.body;
         const userId = res.locals.userId;
 
