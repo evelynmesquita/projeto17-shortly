@@ -43,14 +43,14 @@ export const signIn = async (req, res) => {
         const query = 'SELECT * FROM users WHERE email = $1';
         const result = await db.query(query, [email.toLowerCase()]);
 
-        if (result.rows.length === 0) return res.status(401).send('Usuário não encontrado');
+        if (result.rows.length === 0) return res.status(401).send('Email ou senha incorretos');
         
         const user = result.rows[0];
         const passwordMatch = await bcrypt.compare(password, user.password);
 
-        if (!passwordMatch) return res.status(401).send('Senha incorreta');
+        if (!passwordMatch) return res.status(401).send('Email ou senha incorretos');
         
-        const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ email }, process.env.JWT_SECRET || 'mysecret', { expiresIn: '1h' });
 
         res.status(200).send({ token });
     } catch (error) {
