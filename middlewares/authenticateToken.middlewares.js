@@ -4,11 +4,11 @@ import { db } from '../database/database.connection.js';
 export const authenticateToken = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).send('Token de autenticação não fornecido ou inválido.');
+        return res.status(402).send('Token de autenticação não fornecido ou inválido.');
     }
 
     const token = authHeader.split(' ')[1];
-    jwt.verify(token, process.env.JWT_SECRET , async (err, user) => {
+    jwt.verify(token, process.env.JWT_SECRET || 'mysecret', async (err, user) => {
         if (err) {
             return res.status(401).send('Token de autenticação inválido.');
         }
