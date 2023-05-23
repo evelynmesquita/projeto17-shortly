@@ -14,8 +14,7 @@ export const authenticateToken = (req, res, next) => {
         }
         req.user = user;
 
-        const { rows: [userId] } = await db.query(`SELECT * FROM users WHERE email = $1`, [user.email])
-
+        const { rows: [userId] } = await db.query(`SELECT * FROM users WHERE email = $1`, [user.email.toLowerCase()])
 
         res.locals.userId = userId.id
 

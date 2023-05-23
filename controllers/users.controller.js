@@ -1,7 +1,6 @@
 import bcrypt from "bcrypt";
 import { db } from "../database/database.connection.js";
 import jwt from 'jsonwebtoken';
-import joi from 'joi';
 
 export const registerUser = async (req, res) => {
     const { name, email, password, confirmPassword } = req.body;
