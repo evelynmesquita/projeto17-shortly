@@ -30,7 +30,7 @@ export const findURLById = async (req, res) => {
         const { id } = req.params;
 
         const query = `
-            SELECT id, shortenedUrl, originalUrl
+            SELECT id, shortenedUrl, originalUrl as url
             FROM urls WHERE id = $1`;
         const values = [id];
 
@@ -77,7 +77,7 @@ export const deleteURL = async (req, res) => {
 
         const result = await db.query(query, values);
 
-        if (result.rows.length === 0) return res.sendStatus(401);
+        if (result.rows.length === 0) return res.sendStatus(404);
 
         const deleteQuery = 'DELETE FROM urls WHERE id = $1';
         await db.query(deleteQuery, [id]);
