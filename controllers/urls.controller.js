@@ -49,12 +49,12 @@ export const getShortURL = async (req, res) => {
     try {
         const { shortUrl } = req.params;
 
-        const query = 'SELECT originalUrl FROM urls WHERE shortenedUrl = $1';
-        const values = [shortUrl];
+        // const query = 'SELECT originalUrl FROM urls WHERE shortenedUrl = $1';
+        // const values = [shortUrl];
 
-        const result = await db.query(query, values);
+        // const result = await db.query(query, values);
 
-        if (result.rowCount === 0) return res.sendStatus(404);
+        // if (result.rowCount === 0) return res.sendStatus(404);
         
         const originalUrl = result.rows[0].originalurl;
 
@@ -71,6 +71,11 @@ export const deleteURL = async (req, res) => {
     try {
         const { id } = req.params;
         const { userId } = res.locals;
+
+        const checkIdQuery = 'SELECT * FROM urls WHERE id = $1'
+        const response = await db.query(checkIdQuery, [id])
+
+        if (response.rowCount === 0) return res.sendStatus(404)
 
         const query = 'SELECT * FROM urls WHERE id = $1 AND user_id = $2';
         const values = [id, userId];
